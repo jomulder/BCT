@@ -2,6 +2,6 @@
 Fortran95 code of the program BCT (Bayesian Correlation Testing). This program is part of the paper by Mulder &amp; Gelissen's (under review) "Bayes factors testing of equality and order constraints on measures of association in social research".
 
 
-# Written by Joris Mulder <j.mulder3@tilburguniversity.edu>
-# Last Modified 11/01/18
-# Licensed under the GNU General Public License version 2 (June, 1991)
+Written by Joris Mulder <j.mulder3@tilburguniversity.edu>
+Last Modified 11/01/18
+Licensed under the GNU General Public License version 2 (June, 1991)
