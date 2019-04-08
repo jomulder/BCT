@@ -851,37 +851,7 @@ subroutine estimate_postMeanCov_FisherZ(postZmean, postZcov, JUprior)
             end do
 
             !draw C using method of Liu and Daniels (LD, 2006)
-            
-            !Option 1. draw candidate C from Jeffreys type of prior for the correlation matrix
-!            diffmat(1:Njs(g1),1:P) = Ygroups(g1,1:Njs(g1),1:P) - matmul(Xgroups(g1,1:Njs(g1),1:K),BDraws(g1,1:K,1:P))
-!            errorMatj = matmul(transpose(diffmat(1:Njs(g1),1:P)),diffmat(1:Njs(g1),1:P))
-!            SS1 = matmul(matmul(diag(1/sigmaDraws(g1,:)),errorMatj),diag(1/sigmaDraws(g1,:)))
-!	        SS1 = .i.SS1
-!	        call gen_wish(SS1,Njs(g1),dummyPP)
-!    	    dummyPP = .i.dummyPP
-!     	    dummyPP = dummyPP! + Cnugget
-! 	        Ccan = matmul(matmul(diag(1/sqrt(diagonals(dummyPP))),dummyPP),diag(1/sqrt(diagonals(dummyPP))))
-!	        Ccan = Ccan! + Cnugget
-!            
-!            Ccurr = CDraws(g1,:,:)
-!            CcurrInv = .i.Ccurr
-!            !target prior of Barnard et al. with nu = p + kappa0
-!
-!             logR_MH_part3 = (-.5*real(P+1))*(log(det(Ccurr))-log(det(Ccan))) !correct for proposal prior
-!             R_MH = exp(logR_MH_part3)
-!
-!            !note that if Wp is not the identity matrix we have to compute sum(diagonals(matmul(Wp,RcurrInv))) in the last line
-!            call rnun(rnunif)
-!            if(rnunif(1) < R_MH) then
-!                CDraws(g1,:,:) = Ccan(:,:)
-!                acceptC(g1) = acceptC(g1) + 1
-!                Cinv = CcanInv
-!            else
-!                Cinv = CcurrInv
-!            end if
-            !End option 1
-            
-            !Option 2. draw candidate C from flat prior p(C)=1
+            !draw candidate C from flat prior p(C)=1
             diffmat(1:Njs(g1),1:P) = Ygroups(g1,1:Njs(g1),1:P) - matmul(Xgroups(g1,1:Njs(g1),1:K),BDraws(g1,1:K,1:P))
             errorMatj = matmul(transpose(diffmat(1:Njs(g1),1:P)),diffmat(1:Njs(g1),1:P))
             Ds = diag(1/sqrt(diagonals(errorMatj)))
@@ -1267,26 +1237,14 @@ subroutine estimate_postMeanCov_FisherZordinal(ordinal, Cat, maxCat, postZmean, 
             epsteps = matmul(transpose(diffmat(1:Njs(g1),1:P)),diffmat(1:Njs(g1),1:P))
             SS1 = matmul(matmul(diag(1/sigmaDraws(g1,:)),epsteps),diag(1/sigmaDraws(g1,:)))
             SS1 = .i.SS1
-            call gen_wish(SS1,Njs(g1),dummyPP)
+            !proposal send using a flat prior for the covariance matrix
+            call gen_wish(SS1,Njs(g1)-P-1,dummyPP)
             dummyPP = .i.dummyPP
-            dummyPP = dummyPP !+ Cnugget
 	    	Ccan = matmul(matmul(diag(1/sqrt(diagonals(dummyPP))),dummyPP),diag(1/sqrt(diagonals(dummyPP))))
-!	    	Ccan = Ccan + Cnugget
             CcanInv = .i.Ccan
-            CcurrInv = .i.Ccurr
-            !target prior of Barnard et al. with nu = p + kappa0
-            logR_MH_part3 = (-.5*real(P+1))*(log(det(Ccurr))-log(det(Ccan))) !proposal prior
-            R_MH = exp(logR_MH_part3)
-!
-            !note that if Wp is not the identity matrix we have to compute sum(diagonals(matmul(Wp,RcurrInv))) in the last line
-            call rnun(rnunif)
-            if(rnunif(1) < R_MH) then
-                CDraws(g1,:,:) = Ccan(:,:)
-                acceptC(g1) = acceptC(g1) + 1
-                Cinv = CcanInv
-            else
-                Cinv = CcurrInv
-            end if
+            !always accept because the proposal prior is the same as the target prior
+            CDraws(g1,:,:) = Ccan(:,:)
+            Cinv = CcanInv
 !           
             !draw sigma's
             do p1 = 1,P
@@ -1441,32 +1399,23 @@ subroutine estimate_postMeanCov_FisherZordinal(ordinal, Cat, maxCat, postZmean, 
             diffmat(1:Njs(g1),1:P) = Wgroups(g1,1:Njs(g1),1:P) - matmul(Xgroups(g1,1:Njs(g1),1:K),BDraws(g1,1:K,1:P))
             errorMatj = matmul(transpose(diffmat(1:Njs(g1),1:P)),diffmat(1:Njs(g1),1:P))
             Ds = diag(1/sqrt(diagonals(errorMatj)))
-	        diffmat(1:Njs(g1),1:P) = matmul(diffmat(1:Njs(g1),1:P),Ds) !diffmat is now epsilon in LD
+            diffmat(1:Njs(g1),1:P) = matmul(diffmat(1:Njs(g1),1:P),Ds) !diffmat is now epsilon in LD
             epsteps = matmul(transpose(diffmat(1:Njs(g1),1:P)),diffmat(1:Njs(g1),1:P))
-    	    SS1 = matmul(matmul(diag(1/sigmaDraws(g1,:)),epsteps),diag(1/sigmaDraws(g1,:)))
-    	    SS1 = .i.SS1
-    	    call gen_wish(SS1,Njs(g1),dummyPP)
-    	    dummyPP = .i.dummyPP
-    	    dummyPP = dummyPP
-    	    Ccan = matmul(matmul(diag(1/sqrt(diagonals(dummyPP))),dummyPP),diag(1/sqrt(diagonals(dummyPP))))
+            SS1 = matmul(matmul(diag(1/sigmaDraws(g1,:)),epsteps),diag(1/sigmaDraws(g1,:)))
+            SS1 = .i.SS1
+            !proposal send using a flat prior for the covariance matrix
+            call gen_wish(SS1,Njs(g1)-P-1,dummyPP)
+            dummyPP = .i.dummyPP
+	    	Ccan = matmul(matmul(diag(1/sqrt(diagonals(dummyPP))),dummyPP),diag(1/sqrt(diagonals(dummyPP))))
             CcanInv = .i.Ccan
-            Ccurr = CDraws(g1,:,:)
-            CcurrInv = .i.Ccurr
-            !target prior of Barnard et al. with nu = p + kappa0
-            logR_MH_part3 = (-.5*real(P+1))*(log(det(Ccurr))-log(det(Ccan))) !proposal prior
-            R_MH = exp(logR_MH_part3)
-    !
-            !note that if Wp is not the identity matrix we have to compute sum(diagonals(matmul(Wp,RcurrInv))) in the last line
-            call rnun(rnunif)
-            if(rnunif(1) < R_MH) then
-                CDraws(g1,:,:) = Ccan(:,:)
-                acceptC(g1) = acceptC(g1) + 1
-                Cinv = CcanInv
-            else
-                Cinv = CcurrInv
-            end if
+            !Metropolis-Hastings not needed because proposal prior is same as target prior
+            !logR_MH_part3 = (-.5*real(P+1))*(log(det(Ccurr))-log(det(Ccan))) !proposal prior
+            !R_MH = exp(logR_MH_part3)
+            !Thus, always accept because the proposal prior is the same as the target prior
+            CDraws(g1,:,:) = Ccan(:,:)
+            Cinv = CcanInv
     !            
-            do i1 = 2,P !keep Fisher z transformed posterior draws of rho's
+            do i1 = 2,P !store Fisher z transformed posterior draws of rho's
                 Zcorr_sample(s1,(corrteller+1):(corrteller+i1-1)) = .5*log((1+CDraws(g1,i1,1:(i1-1)))/(1-CDraws(g1,i1,1:(i1-1))))
                 corrteller = corrteller + i1 - 1
             end do
